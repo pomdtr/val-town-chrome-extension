@@ -35,6 +35,6 @@ export const manifest: chrome.runtime.ManifestV3 = {
     512: "icons/512.png",
   },
   omnibox: {
-    keyword: "val",
+    keyword: "eval",
   },
 };
