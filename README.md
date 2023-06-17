@@ -1,65 +1,23 @@
-# val-town-web-extension
+# Web Extension for Val Town
 
-This template should help get you started developing a vanilla web extension in Vite.
+## Features
 
-## Usage Notes
+### Side Panel
 
-The extension manifest is defined in `src/manifest.js` and used by `@samrum/vite-plugin-web-extension` in the vite config.
+![val town running in the side panel](./assets/side-panel.png)
 
-Background, content scripts, options, and popup entry points exist in the `src/entries` directory. 
+### Omnibox
 
-Content scripts are rendered by `src/entries/contentScript/renderContent.js` which renders content within a ShadowRoot
-and handles style injection for HMR and build modes.
+![eval from the omnibox](./assets/omnibox.png)
 
-Otherwise, the project functions just like a regular Vite project.
+### Context Menu
 
+![context menu](./assets/context-menu.png)
 
+## Installation
 
-HMR during development in Manifest V3 requires Chromium version >= 110.0.5480.0.
-
-Refer to [@samrum/vite-plugin-web-extension](https://github.com/samrum/vite-plugin-web-extension) for more usage notes.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-## Commands
-### Build
-#### Development, HMR
-
-Hot Module Reloading is used to load changes inline without requiring extension rebuilds and extension/page reloads
-Currently only works in Chromium based browsers.
-```sh
-npm run dev
-```
-
-#### Development, Watch
-
-Rebuilds extension on file changes. Requires a reload of the extension (and page reload if using content scripts)
-```sh
-npm run watch
-```
-
-#### Production
-
-Minifies and optimizes extension build
-```sh
-npm run build
-```
-
-### Load extension in browser
-
-Loads the contents of the dist directory into the specified browser
-```sh
-npm run serve:chrome
-```
-
-```sh
-npm run serve:firefox
-```
+1. Download `extension.zip` from the [releases page](https://github.com/deta/web-extension/releases/latest).
+2. Extract the zip file.
+3. Go to your browser's extensions page (<chrome://extensions> or <edge://extensions>).o
+4. Enable developer mode.
+5. Click on "Load unpacked" and select the extracted `extension/` folder.

@@ -23,10 +23,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
+      - name: Build extension
         run: npm run build
 
-      - name: Zip dist
+      - name: Zip extension
         run: zip -r extension.zip extension
 
       - name: Create release
