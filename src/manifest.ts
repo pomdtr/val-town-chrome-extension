@@ -4,8 +4,22 @@ export const manifest: chrome.runtime.ManifestV3 = {
   name: "Val Town",
   version: "0.0.0",
   manifest_version: 3,
+  action: {
+    default_title: "Click to open Val Town",
+    default_icon: {
+      16: "icons/16.png",
+      19: "icons/19.png",
+      32: "icons/32.png",
+      38: "icons/38.png",
+    },
+  },
   background: {
     service_worker: "src/background.ts",
+  },
+  // @ts-ignore
+  permissions: ["sidePanel", "contextMenus"],
+  side_panel: {
+    default_path: "src/sidepanel.html",
   },
   host_permissions: ["*://*/*"],
   icons: {

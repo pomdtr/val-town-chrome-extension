@@ -9,6 +9,9 @@ export default defineConfig(() => {
     plugins: [
       webExtension({
         manifest,
+        additionalInputs: {
+          html: ["src/sidepanel.html"],
+        },
       }),
     ],
     resolve: {
