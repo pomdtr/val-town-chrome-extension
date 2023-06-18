@@ -1,5 +1,7 @@
 # Web Extension for Val Town
 
+> **Warning** Currently the side panel api is only available in the latest version of Chrome (>= 114).
+
 ## Features
 
 ### Side Panel
