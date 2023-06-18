@@ -1,11 +1,5 @@
 import browser from "webextension-polyfill";
 
-browser.omnibox.onInputEntered.addListener((text) => {
-  browser.tabs.create({
-    url: `https://api.val.town/v1/eval/${encodeURIComponent(text)}`,
-  });
-});
-
 enum actionMenuIds {
   Home = "val-town-home",
   Docs = "val-own-docs",
@@ -13,28 +7,36 @@ enum actionMenuIds {
   Secrets = "val-town-secrets",
 }
 
-browser.contextMenus.create({
-  id: actionMenuIds.Home,
-  title: "Go to Home",
-  contexts: ["action"],
+browser.runtime.onInstalled.addListener(() => {
+  browser.contextMenus.create({
+    id: actionMenuIds.Home,
+    title: "Go to Home",
+    contexts: ["action"],
+  });
+
+  browser.contextMenus.create({
+    id: actionMenuIds.Docs,
+    title: "Go to Docs",
+    contexts: ["action"],
+  });
+
+  browser.contextMenus.create({
+    id: actionMenuIds.Interval,
+    title: "Go to Intervals",
+    contexts: ["action"],
+  });
+
+  browser.contextMenus.create({
+    id: actionMenuIds.Secrets,
+    title: "Go to Secrets",
+    contexts: ["action"],
+  });
 });
 
-browser.contextMenus.create({
-  id: actionMenuIds.Docs,
-  title: "Go to Docs",
-  contexts: ["action"],
-});
-
-browser.contextMenus.create({
-  id: actionMenuIds.Interval,
-  title: "Go to Intervals",
-  contexts: ["action"],
-});
-
-browser.contextMenus.create({
-  id: actionMenuIds.Secrets,
-  title: "Go to Secrets",
-  contexts: ["action"],
+browser.omnibox.onInputEntered.addListener((text) => {
+  browser.tabs.create({
+    url: `https://api.val.town/v1/eval/${encodeURIComponent(text)}`,
+  });
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
