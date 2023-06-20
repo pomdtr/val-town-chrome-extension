@@ -8,19 +8,19 @@
 
 Click on the extension icon to open val town in your browser side panel
 
-![val town running in the side panel](./assets/side-panel.png)
+![val town running in the side panel](./assets/side-panel.jpg)
 
 ### Omnibox
 
 Type eval in the omnibox, then write down you expression. Hit enter to run it and display the output in a new tab.
 
-![eval from the omnibox](./assets/omnibox.png)
+![eval from the omnibox](./assets/omnibox.jpg)
 
 ### Context Menu
 
 Right click on the extension icon to show a list of shortcut.
 
-![context menu](./assets/context-menu.png)
+![context menu](./assets/context-menu.jpg)
 
 ## Installation
 
