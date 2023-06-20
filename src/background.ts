@@ -5,6 +5,7 @@ enum actionMenuIds {
   Docs = "val-own-docs",
   Interval = "val-town-intervals",
   Secrets = "val-town-secrets",
+  OpenInValTown = "open-in-val-town",
 }
 
 browser.runtime.onInstalled.addListener(() => {
@@ -30,6 +31,16 @@ browser.runtime.onInstalled.addListener(() => {
     id: actionMenuIds.Secrets,
     title: "Go to Secrets",
     contexts: ["action"],
+  });
+
+  browser.contextMenus.create({
+    id: "open-in-val-town",
+    title: "Open in Val Town",
+    contexts: ["page"],
+    documentUrlPatterns: [
+      "https://api.val.town/v1/express/*",
+      "https://api.val.town/v1/run/*",
+    ],
   });
 });
 
@@ -64,6 +75,16 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         url: "https://val.town/settings/secrets",
         index: tab && tab.index + 1,
       });
+      return;
+    case "open-in-val-town":
+      if (!info.pageUrl) return;
+      const url = new URL(info.pageUrl);
+      const val = url.pathname.split("/").pop();
+      browser.tabs.create({
+        url: `https://val.town/v/${val}`,
+        index: tab && tab.index + 1,
+      });
+      return;
   }
 });
 
