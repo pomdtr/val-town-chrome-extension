@@ -38,7 +38,7 @@ browser.runtime.onInstalled.addListener(() => {
     title: "Open in Val Town",
     contexts: ["page"],
     documentUrlPatterns: [
-      "https://api.val.town/v1/express/*",
+      "https://*.express.val.run/*",
       "https://api.val.town/v1/run/*",
     ],
   });
@@ -76,15 +76,30 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         index: tab && tab.index + 1,
       });
       return;
-    case "open-in-val-town":
+    case "open-in-val-town": {
       if (!info.pageUrl) return;
       const url = new URL(info.pageUrl);
-      const val = url.pathname.split("/").pop();
-      browser.tabs.create({
-        url: `https://val.town/v/${val}`,
-        index: tab && tab.index + 1,
-      });
-      return;
+
+      if (url.hostname === "api.val.town") {
+        const val = url.pathname.split("/").pop();
+        browser.tabs.create({
+          url: `https://val.town/v/${val}`,
+          index: tab && tab.index + 1,
+        });
+        return;
+      } else {
+        const val = url.hostname.split(".")[0];
+        if (!val) return;
+
+        const [owner, valName] = val.split("-");
+
+        browser.tabs.create({
+          url: `https://val.town/v/${owner}.${valName}`,
+          index: tab && tab.index + 1,
+        });
+        return;
+      }
+    }
   }
 });
 
