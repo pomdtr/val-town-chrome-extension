@@ -17,21 +17,22 @@ form.addEventListener("submit", async (e) => {
 
   const result = await res.json();
 
-  // add an article to the repl div
-  const article = document.createElement("article");
+  const details = document.createElement("details");
+  // add a message header to the article
+  const summary = document.createElement("summary");
+  summary.textContent = expression;
+  details.appendChild(summary);
+  details.open = true;
 
-  // add a message body to the article
   const messagePre = document.createElement("pre");
   const messageCode = document.createElement("code");
   messageCode.textContent = JSON.stringify(result, null, 2);
   messageCode.classList.add("language-json");
   messagePre.appendChild(messageCode);
-  article.appendChild(messagePre);
+  details.appendChild(messagePre);
 
-  // add a message header to the article
-  const messageFooter = document.createElement("footer");
-  messageFooter.textContent = expression;
-  article.appendChild(messageFooter);
+  const article = document.createElement("article");
+  article.appendChild(details);
 
   // add as first child of repl div
   repl.insertBefore(article, repl.firstChild);
