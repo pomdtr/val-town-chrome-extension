@@ -17,7 +17,7 @@ export const manifest: chrome.runtime.ManifestV3 = {
     service_worker: "src/background.ts",
   },
   // @ts-ignore
-  permissions: ["sidePanel", "contextMenus"],
+  permissions: ["sidePanel", "contextMenus", "offscreen"],
   side_panel: {
     default_path: "src/sidepanel.html",
   },
