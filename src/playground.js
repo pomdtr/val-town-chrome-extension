@@ -17,12 +17,17 @@ form.addEventListener("submit", async (e) => {
 
   const result = await res.json();
 
+  document.querySelectorAll("details").forEach((el) => {
+    el.open = false;
+  });
+
   const details = document.createElement("details");
+  details.open = true;
+
   // add a message header to the article
   const summary = document.createElement("summary");
   summary.textContent = expression;
   details.appendChild(summary);
-  details.open = true;
 
   const messagePre = document.createElement("pre");
   const messageCode = document.createElement("code");
@@ -31,11 +36,8 @@ form.addEventListener("submit", async (e) => {
   messagePre.appendChild(messageCode);
   details.appendChild(messagePre);
 
-  const article = document.createElement("article");
-  article.appendChild(details);
-
   // add as first child of repl div
-  repl.insertBefore(article, repl.firstChild);
+  repl.insertBefore(details, repl.firstChild);
 
   document.querySelectorAll("pre code").forEach((el) => {
     hljs.highlightElement(el);
