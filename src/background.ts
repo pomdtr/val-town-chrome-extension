@@ -92,7 +92,7 @@ browser.runtime.onInstalled.addListener(() => {
 
 browser.omnibox.onInputEntered.addListener((text) => {
   browser.tabs.create({
-    url: `https://api.val.town/v1/eval/${encodeURIComponent(text)}`,
+    url: `/src/playground.html?expression=${encodeURIComponent(text)}`,
   });
 });
 
