@@ -17,10 +17,6 @@ form.addEventListener("submit", async (e) => {
 
   const result = await res.json();
 
-  document.querySelectorAll("details").forEach((el) => {
-    el.open = false;
-  });
-
   const details = document.createElement("details");
   details.open = true;
 
