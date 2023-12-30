@@ -26,12 +26,12 @@ Then, click on the extension icon to open the options, and add your item to the 
 
 ```json
 {
-    "contextMenus": [
-        {
-        "title": "Copy Markdown Link",
-        "val": "@pomdtr/copy_markdown_link",
-        }
-    ]
+  "contextMenus": [
+    {
+      "title": "Copy Markdown Link",
+      "val": "@pomdtr/copy_markdown_link",
+    }
+  ]
 }
 ```
 
@@ -41,3 +41,7 @@ The following properties are available:
 - `val`: The full name of the val to run (`@owner/val_name`).
 - `patterns`: An array of URL patterns to match against the current page. If the current page does not match any of the patterns, the context menu item will not be shown. If omitted, the context menu item will be shown on all pages.
 - `children`: An array of child context menu items. Cannot be used with `val`.
+
+## Why is my val not working on (Twitter / Github / ...) ?
+
+This extension inject a script in the page head when a context menu item is clicked. This script reference the esm.town url of the val. If the website you are trying to run the val on does not allow scripts from esm.town, the val will not work.
