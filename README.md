@@ -4,13 +4,23 @@ Run vals from the browser context menu.
 
 ![demo](./doc/screenshot.png)
 
+## Installation
+
+1. Download the latest release from the [releases page](https://github.com/pomdtr/val-town-web-extension/releases/latest).
+2. Unzip the file.
+3. Open the [extensions page](chrome://extensions) in Chrome.
+4. Enable developer mode.
+5. Click "Load unpacked" and select the unzipped folder.
+
 ## Usage
 
 Create a new val in val.town containing client-side javascript.
 
-```js
+```javascript
 await navigator.clipboard.writeText(`[${document.title}](${location.href})`);
 ```
+
+Make sure that your val is either public or unlisted.
 
 Then, click on the extension icon to open the options, and add your item to the `contextMenus` list.
 
