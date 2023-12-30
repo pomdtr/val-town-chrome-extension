@@ -12,9 +12,6 @@ export default defineConfig(() => {
     plugins: [
       webExtension({
         manifest,
-        additionalInputs: {
-          html: ["src/sidepanel.html", "src/playground.html"],
-        },
       }),
     ],
     resolve: {

@@ -9,17 +9,20 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@samrum/vite-plugin-web-extension": "^5.0.0",
-    "@types/chrome": "^0.0.237",
-    "@types/webextension-polyfill": "^0.10.0",
-    "typescript": "^5.0.4",
-    "vite": "~4.3.3",
-    "web-ext": "^7.6.2"
+    "@samrum/vite-plugin-web-extension": "^5.1.0",
+    "@types/chrome": "^0.0.254",
+    "@types/webextension-polyfill": "^0.10.7",
+    "typescript": "^5.3.3",
+    "vite": "~5.0.10",
+    "web-ext": "^7.9.0"
   },
   "dependencies": {
-    "@picocss/pico": "^1.5.10",
-    "highlight.js": "^11.8.0",
-    "lodash": "^4.17.21",
+    "@codemirror/commands": "^6.3.3",
+    "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/language": "^6.10.0",
+    "@codemirror/lint": "^6.4.2",
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.23.0",
     "webextension-polyfill": "^0.10.0"
   }
 }

@@ -14,14 +14,20 @@ export const manifest: chrome.runtime.ManifestV3 = {
     },
   },
   background: {
-    service_worker: "src/background.ts",
+    service_worker: "src/worker.ts",
   },
-  // @ts-ignore
-  permissions: ["sidePanel", "contextMenus", "offscreen"],
-  side_panel: {
-    default_path: "src/sidepanel.html",
+  permissions: [
+    "contextMenus",
+    "scripting",
+    "activeTab",
+    "storage",
+  ],
+  host_permissions: [
+    "https://www.val.town/*",
+  ],
+  options_ui: {
+    page: "src/options.html",
   },
-  host_permissions: ["*://*/*"],
   icons: {
     16: "icons/16.png",
     19: "icons/19.png",
