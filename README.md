@@ -22,7 +22,7 @@ await navigator.clipboard.writeText(`[${document.title}](${location.href})`);
 
 Then, click on the extension icon to open the options, and add your item to the `contextMenus` list.
 
-```json
+```jsonc
 {
   "token": "your_token", // necessary if your want to run/access private vals
   "contextMenus": [
