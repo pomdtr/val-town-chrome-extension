@@ -28,7 +28,7 @@ Then, click on the extension icon to open the options, and add your item to the 
   "contextMenus": [
     {
       "title": "Copy Markdown Link",
-      "val": "@pomdtr/copy_markdown_link",
+      "url": "https://esm.town/v/pomdtr/copy_markdown_link",
     }
   ]
 }
@@ -39,8 +39,8 @@ The context menu items will appear on all val pages (`https://www.val.town/v/*`)
 The following properties are available:
 
 - `title`: The title of the context menu item.
-- `val`: The full name of the val to run (`@owner/val_name`).
-- `children`: An array of child context menu items. Cannot be used with `val`.
+- `url`: The url of the script to run.
+- `children`: An array of child context menu items. Cannot be used with `url`.
 
 ## Why is my val not working on (Twitter / Github / ...) ?
 

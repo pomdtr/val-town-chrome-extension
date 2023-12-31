@@ -9,8 +9,8 @@ function createMenuItem(id: string, item: MenuItem): Record<string, string> {
     documentUrlPatterns: ["https://www.val.town/v/*"],
   });
 
-  if (item.val) {
-    return { [id]: item.val };
+  if (item.url) {
+    return { [id]: item.url };
   }
 
   let vals: Record<string, string> = {};
@@ -75,14 +75,19 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 
   const { vals } = await browser.storage.local.get(["vals"]);
-  const val = vals[info.menuItemId];
-  if (!val) {
+  const rawUrl = vals[info.menuItemId];
+  if (!rawUrl) {
     console.error("no val for", info.menuItemId);
     console.error(`vals`, vals);
     return;
   }
-  const [owner, name] = val.slice(1).split("/");
-  const resp = await fetch(`https://api.val.town/v1/alias/${owner}/${name}`, {
+  const url = new URL(rawUrl);
+  if (!(url.origin == "https://esm.town")) {
+    console.error("invalid origin", url.origin);
+    return;
+  }
+
+  const resp = await fetch(url, {
     headers: {
       authorization: `Bearer ${config.token}`,
     },
@@ -91,7 +96,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     console.error("resp not ok", resp);
     return;
   }
-  const { code } = await resp.json();
+  const code = await resp.text();
 
   browser.scripting.executeScript({
     target: { tabId: tab.id },

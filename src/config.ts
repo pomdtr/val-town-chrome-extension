@@ -5,10 +5,15 @@ export type Config = {
 
 export type MenuItem = {
   title: string;
-  val?: string;
+  url?: string;
   children?: MenuItem[];
 };
 
 export const defaultConfig = {
-  "contextMenus": [],
+  "contextMenus": [
+    {
+      title: "Copy Markdown Link",
+      url: "https://esm.town/v/pomdtr/copy_markdown_link",
+    },
+  ],
 };
