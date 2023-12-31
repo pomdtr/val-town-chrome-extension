@@ -24,7 +24,7 @@ function createMenuItem(id: string, item: MenuItem): Record<string, MenuItem> {
 }
 
 browser.runtime.onInstalled.addListener(async () => {
-  let storage = await browser.storage.sync.get(["config"]);
+  let storage = await browser.storage.local.get(["config"]);
   let config: Config;
   if (storage.config) {
     config = JSON.parse(storage.config);
@@ -42,7 +42,7 @@ browser.runtime.onInstalled.addListener(async () => {
   await browser.storage.local.set({ vals });
 });
 
-browser.storage.sync.onChanged.addListener(async (changes) => {
+browser.storage.local.onChanged.addListener(async (changes) => {
   if (!changes.config) return;
   const config = JSON.parse(changes.config.newValue) as Config;
   await browser.contextMenus.removeAll();
