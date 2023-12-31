@@ -5,8 +5,8 @@ function createMenuItem(id: string, item: MenuItem): Record<string, string> {
   browser.contextMenus.create({
     id,
     title: item.title,
-    documentUrlPatterns: item.patterns,
-    contexts: ["page", "selection", "link", "image", "video", "audio", "frame"],
+    contexts: ["page"],
+    documentUrlPatterns: ["https://www.val.town/v/*"],
   });
 
   if (item.val) {
@@ -67,6 +67,13 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
 
+  const storage = await browser.storage.sync.get(["config"]);
+  const config = JSON.parse(storage.config || "{}") as Config;
+  if (!config.token) {
+    console.error("no token");
+    return;
+  }
+
   const { vals } = await browser.storage.local.get(["vals"]);
   const val = vals[info.menuItemId];
   if (!val) {
@@ -75,19 +82,34 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
   const [owner, name] = val.slice(1).split("/");
-  const randInt = Math.floor(Math.random() * 1000000);
-  const esmUrl = `https://esm.town/v/${owner}/${name}#${Math.floor(randInt)}`;
+  const resp = await fetch(`https://api.val.town/v1/alias/${owner}/${name}`, {
+    headers: {
+      authorization: `Bearer ${config.token}`,
+    },
+  });
+  if (!resp.ok) {
+    console.error("resp not ok", resp);
+    return;
+  }
+  const { code } = await resp.json();
 
   browser.scripting.executeScript({
     target: { tabId: tab.id },
     // @ts-ignore
     world: "MAIN",
-    func: async (src: string) => {
+    func: async (code: string, token: string) => {
+      if (!document.getElementById("valtown-ctx")) {
+        const script = document.createElement("script");
+        script.id = "valtown-ctx";
+        script.type = "module";
+        script.text = `window.valtown = { token: "${token}" }`;
+        document.head.appendChild(script);
+      }
       const script = document.createElement("script");
       script.type = "module";
-      script.src = src;
+      script.text = code;
       document.head.appendChild(script);
     },
-    args: [esmUrl],
+    args: [code, config.token],
   });
 });
