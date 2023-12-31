@@ -40,7 +40,8 @@ The following properties are available:
 
 - `title`: The title of the context menu item.
 - `url`: The url of the script to run.
-- `children`: An array of child context menu items. Cannot be used with `url`.
+- `config`: The config to pass to the script.
+- `children`: An array of child context menu items. Cannot be used with `url` or `config`.
 
 ## Why is my val not working on (Twitter / Github / ...) ?
 

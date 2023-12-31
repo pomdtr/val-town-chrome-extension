@@ -5,6 +5,7 @@ export type Config = {
 
 export type MenuItem = {
   title: string;
+  config?: any;
   url?: string;
   children?: MenuItem[];
 };

@@ -15,7 +15,7 @@ import {
   syntaxHighlighting,
 } from "@codemirror/language";
 
-const { config } = await browser.storage.sync.get(["config"]);
+const { config } = await browser.storage.local.get(["config"]);
 
 const state = EditorState.create({
   extensions: [
@@ -31,7 +31,7 @@ const state = EditorState.create({
           if (!("contextMenus" in config)) {
             throw new Error("Invalid config");
           }
-          browser.storage.sync.set({ config: update.state.doc.toString() });
+          browser.storage.local.set({ config: update.state.doc.toString() });
         } catch (e) {
           // pass
         }

@@ -1,7 +1,7 @@
 import browser from "webextension-polyfill";
 import { Config, defaultConfig, MenuItem } from "./config";
 
-function createMenuItem(id: string, item: MenuItem): Record<string, string> {
+function createMenuItem(id: string, item: MenuItem): Record<string, MenuItem> {
   browser.contextMenus.create({
     id,
     title: item.title,
@@ -10,15 +10,16 @@ function createMenuItem(id: string, item: MenuItem): Record<string, string> {
   });
 
   if (item.url) {
-    return { [id]: item.url };
+    return { [id]: item };
   }
 
-  let vals: Record<string, string> = {};
+  let vals: Record<string, MenuItem> = {};
   for (const [idx, child] of item.children?.entries() || []) {
     const res = createMenuItem(`${id}.${idx}`, child);
     vals = { ...vals, ...res };
   }
 
+  vals[id] = item;
   return vals;
 }
 
@@ -67,21 +68,22 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
 
-  const storage = await browser.storage.sync.get(["config"]);
+  const storage = await browser.storage.local.get(["config", "vals"]);
   const config = JSON.parse(storage.config || "{}") as Config;
   if (!config.token) {
     console.error("no token");
     return;
   }
 
-  const { vals } = await browser.storage.local.get(["vals"]);
-  const rawUrl = vals[info.menuItemId];
-  if (!rawUrl) {
+  const vals = storage.vals as Record<string, MenuItem>;
+  const val = vals[info.menuItemId];
+  if (!val.url) {
     console.error("no val for", info.menuItemId);
     console.error(`vals`, vals);
     return;
   }
-  const url = new URL(rawUrl);
+
+  const url = new URL(val.url);
   if (!(url.origin == "https://esm.town")) {
     console.error("invalid origin", url.origin);
     return;
@@ -97,17 +99,20 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
   const code = await resp.text();
+  console.log(val);
 
   browser.scripting.executeScript({
     target: { tabId: tab.id },
     // @ts-ignore
     world: "MAIN",
-    func: async (code: string, token: string) => {
+    func: async (code: string, token: string, config: any) => {
       if (!document.getElementById("valtown-ctx")) {
         const script = document.createElement("script");
         script.id = "valtown-ctx";
         script.type = "module";
-        script.text = `window.valtown = { token: "${token}" }`;
+        script.text = `window.valtown = { token: "${token}", config: ${
+          JSON.stringify(config)
+        } }`;
         document.head.appendChild(script);
       }
       const script = document.createElement("script");
@@ -115,6 +120,6 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
       script.text = code;
       document.head.appendChild(script);
     },
-    args: [code, config.token],
+    args: [code, config.token, val.config || {}],
   });
 });
