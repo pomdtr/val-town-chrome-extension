@@ -17,7 +17,12 @@ Run vals from the browser context menu.
 Create a new val in val.town containing client-side javascript.
 
 ```javascript
-await navigator.clipboard.writeText(`[${document.title}](${location.href})`);
+import { extractValInfo } from "https://esm.town/v/pomdtr/extractValInfo";
+
+// @ts-ignore
+const { url } = window.valtown; // the extension will pass a context object to the val
+const { author, name } = extractValInfo(url);
+await navigator.clipboard.writeText(`[@${author}/${name}](${location.href})`);
 ```
 
 Then, click on the extension icon to open the options, and add your item to the `contextMenus` list.
@@ -42,6 +47,14 @@ The following properties are available:
 - `url`: The url of the script to run.
 - `config`: The config to pass to the script.
 - `children`: An array of child context menu items. Cannot be used with `url` or `config`.
+
+## Context
+
+The following properties are available on the context object passed to the val:
+
+- `url`: The url of the val.
+- `token`: The valtown token configured in the extension options.
+- `config`: The config passed to the val in the extension options.
 
 ## Why is my val not working on (Twitter / Github / ...) ?
 
