@@ -24,7 +24,7 @@ Then, click on the extension icon to open the options, and add your item to the 
 
 ```jsonc
 {
-  "token": "your_token", // necessary if your want to run/access private vals
+  "token": "your_token", // required
   "contextMenus": [
     {
       "title": "Copy Markdown Link",
@@ -34,7 +34,7 @@ Then, click on the extension icon to open the options, and add your item to the 
 }
 ```
 
-The context menu items will appear on all val pages (`https://www.val.town/v/*`).
+The context menu items will appear on all val links (`https://www.val.town/v/*`).
 
 The following properties are available:
 

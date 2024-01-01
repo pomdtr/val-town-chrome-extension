@@ -5,8 +5,8 @@ function createMenuItem(id: string, item: MenuItem): Record<string, MenuItem> {
   browser.contextMenus.create({
     id,
     title: item.title,
-    contexts: ["page"],
-    documentUrlPatterns: ["https://www.val.town/v/*"],
+    contexts: ["link"],
+    targetUrlPatterns: ["https://www.val.town/v/*"],
   });
 
   if (item.url) {
@@ -105,21 +105,21 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     target: { tabId: tab.id },
     // @ts-ignore
     world: "MAIN",
-    func: async (code: string, token: string, config: any) => {
-      if (!document.getElementById("valtown-ctx")) {
+    func: async (code: string, ctx: Record<string, any>) => {
+      function injectScript(code: string) {
         const script = document.createElement("script");
-        script.id = "valtown-ctx";
         script.type = "module";
-        script.text = `window.valtown = { token: "${token}", config: ${
-          JSON.stringify(config)
-        } }`;
+        script.text = code;
         document.head.appendChild(script);
       }
-      const script = document.createElement("script");
-      script.type = "module";
-      script.text = code;
-      document.head.appendChild(script);
+      injectScript(
+        `window.valtown = ${JSON.stringify(ctx)};\n${code}`,
+      );
     },
-    args: [code, config.token, val.config || {}],
+    args: [code, {
+      token: config.token,
+      config: val.config,
+      url: info.linkUrl || info.pageUrl,
+    }],
   });
 });
