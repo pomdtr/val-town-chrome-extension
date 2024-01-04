@@ -30,7 +30,7 @@ Then, click on the extension icon to open the options, and add your item to the 
 ```jsonc
 {
   "token": "your_token", // required
-  "contextMenus": [
+  "actions": [
     {
       "title": "Copy Markdown Link",
       "url": "https://esm.town/v/pomdtr/copy_markdown_link",
@@ -39,7 +39,7 @@ Then, click on the extension icon to open the options, and add your item to the 
 }
 ```
 
-The context menu items will appear on all val links (`https://www.val.town/v/*`).
+The context menu actions will appear on all val links (`https://www.val.town/v/*`).
 
 The following properties are available:
 

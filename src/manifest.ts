@@ -19,7 +19,6 @@ export const manifest: chrome.runtime.ManifestV3 = {
   permissions: [
     "contextMenus",
     "scripting",
-    "activeTab",
     "storage",
   ],
   host_permissions: [

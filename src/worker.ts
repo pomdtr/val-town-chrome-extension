@@ -1,7 +1,7 @@
 import browser from "webextension-polyfill";
-import { Config, defaultConfig, MenuItem } from "./config";
+import { Action, Config, defaultConfig } from "./config";
 
-function createMenuItem(id: string, item: MenuItem): Record<string, MenuItem> {
+function createMenuItem(id: string, item: Action): Record<string, Action> {
   browser.contextMenus.create({
     id,
     title: item.title,
@@ -13,7 +13,7 @@ function createMenuItem(id: string, item: MenuItem): Record<string, MenuItem> {
     return { [id]: item };
   }
 
-  let vals: Record<string, MenuItem> = {};
+  let vals: Record<string, Action> = {};
   for (const [idx, child] of item.children?.entries() || []) {
     const res = createMenuItem(`${id}.${idx}`, child);
     vals = { ...vals, ...res };
@@ -34,7 +34,7 @@ browser.runtime.onInstalled.addListener(async () => {
   console.log("config", config);
 
   let vals = {};
-  for (const [idx, item] of config.contextMenus.entries()) {
+  for (const [idx, item] of config.actions.entries()) {
     const val = createMenuItem(`${idx}`, item);
     vals = { ...vals, ...val };
   }
@@ -48,7 +48,7 @@ browser.storage.local.onChanged.addListener(async (changes) => {
   await browser.contextMenus.removeAll();
 
   let vals = {};
-  for (const item of config.contextMenus) {
+  for (const item of config.actions) {
     const val = createMenuItem(item.title, item);
     vals = { ...vals, ...val };
   }
@@ -75,7 +75,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
 
-  const vals = storage.vals as Record<string, MenuItem>;
+  const vals = storage.vals as Record<string, Action>;
   const val = vals[info.menuItemId];
   if (!val.url) {
     console.error("no val for", info.menuItemId);

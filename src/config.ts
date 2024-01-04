@@ -1,17 +1,17 @@
 export type Config = {
   token?: string;
-  contextMenus: MenuItem[];
+  actions: Action[];
 };
 
-export type MenuItem = {
+export type Action = {
   title: string;
   config?: Record<string, any>;
   url?: string;
-  children?: MenuItem[];
+  children?: Action[];
 };
 
-export const defaultConfig = {
-  "contextMenus": [
+export const defaultConfig: Config = {
+  actions: [
     {
       title: "Copy Markdown Link",
       url: "https://esm.town/v/pomdtr/copy_markdown_link",
