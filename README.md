@@ -21,6 +21,7 @@ The val privacy must be either "public" or "unlisted".
 import { BrowserContext } from "https://esm.town/v/pomdtr/browser";
 import { extractValInfo } from "https://esm.town/v/pomdtr/extractValInfo";
 
+// Copy the val markdown link to the clipboard.
 export default function(ctx: BrowserContext) {
   const { author, name } = extractValInfo(ctx.url);
   await navigator.clipboard.writeText(`[@${author}/${name}](${location.href})`);
@@ -49,6 +50,11 @@ The following properties are available:
 - `url`: The url of the script to run.
 - `config`: The config to pass to the script.
 - `children`: An array of child context menu items. Cannot be used with `url` or `config`.
+
+## Examples
+
+- [Val to Image](https://esm.town/v/pomdtr/val2img)
+- [Open Dependency Graph](https://esm.town/v/pomdtr/open_dependency_graph)
 
 ## Context
 
