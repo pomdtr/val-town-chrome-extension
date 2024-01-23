@@ -31,10 +31,9 @@ browser.runtime.onInstalled.addListener(async () => {
   } else {
     config = defaultConfig;
   }
-  console.log("config", config);
 
   let vals = {};
-  for (const [idx, item] of config.actions.entries()) {
+  for (const [idx, item] of config.actions?.entries() || []) {
     const val = createMenuItem(`${idx}`, item);
     vals = { ...vals, ...val };
   }
@@ -48,7 +47,7 @@ browser.storage.local.onChanged.addListener(async (changes) => {
   await browser.contextMenus.removeAll();
 
   let vals = {};
-  for (const item of config.actions) {
+  for (const item of config.actions || []) {
     const val = createMenuItem(item.title, item);
     vals = { ...vals, ...val };
   }
@@ -75,37 +74,19 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
 
-  const vals = storage.vals as Record<string, Action>;
-  const val = vals[info.menuItemId];
-  if (!val.url) {
+  const actions = storage.vals as Record<string, Action>;
+  const action = actions[info.menuItemId];
+  if (!action.url) {
     console.error("no val for", info.menuItemId);
-    console.error(`vals`, vals);
+    console.error(`vals`, actions);
     return;
   }
-
-  const url = new URL(val.url);
-  if (!(url.origin == "https://esm.town")) {
-    console.error("invalid origin", url.origin);
-    return;
-  }
-
-  const resp = await fetch(url, {
-    headers: {
-      authorization: `Bearer ${config.token}`,
-    },
-  });
-  if (!resp.ok) {
-    console.error("resp not ok", resp);
-    return;
-  }
-  const code = await resp.text();
-  console.log(val);
 
   browser.scripting.executeScript({
     target: { tabId: tab.id },
     // @ts-ignore
     world: "MAIN",
-    func: async (code: string, ctx: Record<string, any>) => {
+    func: async (action: Action, ctx: Record<string, any>) => {
       function injectScript(code: string) {
         const script = document.createElement("script");
         script.type = "module";
@@ -113,12 +94,16 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
         document.head.appendChild(script);
       }
       injectScript(
-        `window.valtown = ${JSON.stringify(ctx)};\n${code}`,
+        `
+import { default as handler } from "${action.url}";
+
+await handler(${JSON.stringify(ctx)});
+`.trimStart(),
       );
     },
-    args: [code, {
+    args: [action, {
       token: config.token,
-      config: val.config,
+      config: action.config,
       url: info.linkUrl || info.pageUrl,
     }],
   });

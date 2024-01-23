@@ -24,13 +24,9 @@ const state = EditorState.create({
     highlightActiveLineGutter(),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        console.debug("doc changed");
         try {
           // check if the config is valid JSON
-          const config = JSON.parse(update.state.doc.toString());
-          if (!("contextMenus" in config)) {
-            throw new Error("Invalid config");
-          }
+          JSON.parse(update.state.doc.toString());
           browser.storage.local.set({ config: update.state.doc.toString() });
         } catch (e) {
           // pass
