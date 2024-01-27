@@ -32,6 +32,7 @@ browser.runtime.onInstalled.addListener(async () => {
     config = defaultConfig;
   }
 
+  await browser.contextMenus.removeAll();
   let vals = {};
   for (const [idx, item] of config.actions?.entries() || []) {
     const val = createMenuItem(`${idx}`, item);
