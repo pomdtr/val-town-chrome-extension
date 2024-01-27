@@ -28,11 +28,13 @@ export default function(ctx: BrowserContext) {
 }
 ```
 
-Then, click on the extension icon to open the options, and add your item to the `contextMenus` list.
+Then, right-click on the extension icon and select the `Options` item to open the settings editor.
+
+You can then add new items to the `actions` list.
 
 ```jsonc
 {
-  "token": "your_token", // required
+  "token": "your_token", // required, will be passed to your val
   "actions": [
     {
       "title": "Copy Markdown Link",
