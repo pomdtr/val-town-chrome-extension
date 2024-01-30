@@ -58,7 +58,7 @@ browser.storage.local.onChanged.addListener(async (changes) => {
 
 browser.action.onClicked.addListener(async () => {
   await browser.tabs.create({
-    url: "chrome://extensions/?options=" + browser.runtime.id,
+    url: `https://www.val.town/search?q=${encodeURIComponent("#web")}`,
   });
 });
 
