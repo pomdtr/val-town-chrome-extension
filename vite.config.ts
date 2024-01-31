@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import webExtension from "@samrum/vite-plugin-web-extension";
 import path from "path";
 import { manifest } from "./src/manifest";
@@ -10,6 +11,7 @@ export default defineConfig(() => {
       outDir: "extension",
     },
     plugins: [
+      react(),
       webExtension({
         manifest,
       }),

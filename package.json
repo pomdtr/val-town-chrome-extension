@@ -11,7 +11,11 @@
   "devDependencies": {
     "@samrum/vite-plugin-web-extension": "^5.1.0",
     "@types/chrome": "^0.0.254",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
     "@types/webextension-polyfill": "^0.10.7",
+    "@vitejs/plugin-react": "^4.2.0",
+    "sass": "^1.70.0",
     "typescript": "^5.3.3",
     "vite": "~5.0.10",
     "web-ext": "^7.9.0"
@@ -23,6 +27,10 @@
     "@codemirror/lint": "^6.4.2",
     "@codemirror/state": "^6.4.0",
     "@codemirror/view": "^6.23.0",
+    "@tanstack/react-query": "^5.17.19",
+    "cmdk": "^0.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "webextension-polyfill": "^0.10.0"
   }
 }

@@ -27,6 +27,12 @@ export const manifest: chrome.runtime.ManifestV3 = {
   options_ui: {
     page: "src/options.html",
   },
+  content_scripts: [
+    {
+      js: ["src/content_script.tsx"],
+      matches: ["https://www.val.town/*"],
+    },
+  ],
   icons: {
     16: "icons/16.png",
     19: "icons/19.png",
