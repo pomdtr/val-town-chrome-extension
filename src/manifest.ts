@@ -12,27 +12,27 @@ export const manifest: chrome.runtime.ManifestV3 = {
       32: "icons/32.png",
       38: "icons/38.png",
     },
+    default_popup: "src/popup.html",
   },
   background: {
     service_worker: "src/worker.ts",
   },
+  commands: {
+    _execute_action: {
+      description: "Show Command Palette",
+      suggested_key: {
+        mac: "Command+Shift+P",
+        default: "Ctrl+Shift+P",
+      },
+    },
+  },
   permissions: [
-    "contextMenus",
-    "scripting",
     "storage",
-  ],
-  host_permissions: [
-    "https://www.val.town/*",
+    "activeTab",
   ],
   options_ui: {
     page: "src/options.html",
   },
-  content_scripts: [
-    {
-      js: ["src/content_script.tsx"],
-      matches: ["https://www.val.town/*"],
-    },
-  ],
   icons: {
     16: "icons/16.png",
     19: "icons/19.png",
@@ -44,8 +44,5 @@ export const manifest: chrome.runtime.ManifestV3 = {
     128: "icons/128.png",
     256: "icons/256.png",
     512: "icons/512.png",
-  },
-  omnibox: {
-    keyword: "eval",
   },
 };

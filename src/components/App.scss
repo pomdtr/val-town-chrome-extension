@@ -102,13 +102,6 @@
 }
 
 [cmdk-root] {
-  z-index: 99999;
-  position: fixed;
-  bottom: 50%;
-  right: 50%;
-  transform: translate(50%, 50%);
-  border: 2px solid var(--gray6); /* Add this line for a 2px solid black border */
-
   max-width: 640px;
   width: 100%;
   background: #ffffff;
@@ -126,6 +119,16 @@
       rgb(45, 46, 49) 74.3%
     );
   }
+}
+
+[cmdk-loading] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 16px;
+  height: 100%;
+  font-size: 14px;
+  color: var(--gray11);
 }
 
 [cmdk-linear-badge] {
@@ -222,15 +225,14 @@
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     color: var(--gray10);
   }
 }
 
 [cmdk-list] {
-  height: min(300px, var(--cmdk-list-height));
-  max-height: 400px;
+  height: 300px;
   overflow: auto;
   overscroll-behavior: contain;
   transition: 100ms ease;
@@ -247,6 +249,16 @@
 }
 
 [cmdk-empty] {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  white-space: pre-wrap;
+  color: var(--gray11);
+}
+
+[cmdk-error] {
   font-size: 14px;
   display: flex;
   align-items: center;

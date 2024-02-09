@@ -1,101 +1,257 @@
-import React, { useEffect } from "react";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import React from "react";
 import { Command } from "cmdk";
 import "./App.scss";
+import type { Config, List, ListItem, CommandRef, Action } from "~/config";
+import { useList } from "@uidotdev/usehooks"
+import * as icons from "@heroicons/react/24/outline"
 
-type TrpcResponse<T> = {
-    result: T;
-};
+const storage = await chrome.storage.local.get(["config"]);
+const config = JSON.parse(storage.config) as Config;
 
-type getHomeItemsResp = {
-    result: {
-        data: {
-            vals: ValRef[];
-        };
-    };
-};
+const code = `
+async (url, ctx) => {
+  try {
+    const { default: handler } = await import(url);
+    return await handler(ctx);
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+`;
 
-type getValResp = TrpcResponse<{
-    data: FullVal;
-}>
+async function extractRootCommands(val: string): Promise<CommandRef[]> {
+    const valUrl = `https://esm.town/v/${val}`;
+    console.log("valUrl", valUrl);
+    const resp = await fetch("https://api.val.town/v1/eval", {
+        method: "POST",
+        body: JSON.stringify({
+            code: `async (url) => await import(url).then(module => module.default);`,
+            args: [
+                valUrl,
+            ]
+        }),
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${config.token}`
+        }
+    });
 
-type ValRef = {
-    id: string;
-    name: string;
-};
-
-type FullVal = {
-    id: string;
-    name: string;
-    user: {
-        handle: string;
+    if (!resp.ok) {
+        throw new Error(`Failed to run val: ${await resp.text()}`);
     }
+
+    return resp.json()
 }
 
-function fetchApi<D>(method: string, input: any) {
-    return fetch(
-        `https://www.val.town/api/trpc/${method}?input=${encodeURIComponent(
-            JSON.stringify(input)
-        )}`
-    ).then((res) => res.json()) as Promise<D>;
+async function runVal<T extends Object = any>(val: string, ctx?: Record<string, any>) {
+    const valUrl = `https://esm.town/v/${val}`;
+    const resp = await fetch("https://api.val.town/v1/eval", {
+        method: "POST",
+        body: JSON.stringify({
+            code,
+            args: [
+                valUrl,
+                ctx
+            ]
+        }),
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${config.token}`
+        }
+    });
+
+    if (!resp.ok) {
+        throw new Error(`Failed to run val: ${await resp.text()}`);
+    }
+
+    const output = await resp.json() as T | { error: string };
+    if ("error" in output) {
+        throw new Error(output.error);
+    }
+
+    return output as T
+}
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const CommandPalette = () => {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const { data } = useQuery({
-        queryKey: ["homeItems"],
-        queryFn: () => fetchApi<getHomeItemsResp>("getHomeItems", { folderId: null })
-    });
+    const [pages, { push, removeAt }] = useList<List>([]);
+    const [error, setError] = React.useState<string>();
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [search, setSearch] = React.useState("");
+    const [value, setValue] = React.useState("");
+    const currentPage = pages[pages.length - 1];
+    const focusedItem = currentPage?.items.find(item => item.title.trim().toLowerCase() === value);
 
-    // toggle command palette on cmd+shift+k
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "k" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
-                setIsOpen(!isOpen);
+    React.useEffect(() => {
+        async function init() {
+            console.log("running val", config.root);
+            const commands = await extractRootCommands(config.root);
+            const items: ListItem[] = commands.map(command => ({
+                title: command.title,
+                icon: "play",
+                commands: [{
+                    type: "run",
+                    title: "Run Action",
+                    val: command.val,
+                    params: command.params || {}
+                }]
+            }))
+
+
+
+            setIsLoading(false);
+            push({
+                type: "list",
+                items
+            });
+        }
+
+        init();
+    }, []);
+
+    React.useEffect(() => {
+        const listener = (e: KeyboardEvent) => {
+            // when tab is pressed, show the actions
+            if (e.key === "Tab") {
+                e.preventDefault();
+                if (!focusedItem) {
+                    return;
+                }
+                setSearch("");
+                push({
+                    type: "list",
+                    items: focusedItem?.commands?.map(command => ({
+                        title: command.title,
+                        commands: [command]
+                    })) || []
+                });
             }
-        };
+        }
 
-        document.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keydown", listener);
         return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    })
+            window.removeEventListener("keydown", listener);
+        }
+    }, [push, focusedItem, setSearch]);
 
     return (
-        <Command.Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <Command.Input onKeyDown={
+        <Command value={value} onValueChange={setValue}>
+            <Command.Input placeholder={isLoading ? undefined : currentPage.placeholder || "Search..."} autoFocus onBlur={
+                (e) => {
+                    e.target.focus();
+                }
+            } value={search} onValueChange={setSearch} onKeyDown={
                 (e) => {
                     if (e.key === "Escape") {
-                        setIsOpen(false);
-                    }
-
-                    // prevent default behavior of opening the pin view
-                    if (e.key === "n" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                        e.preventDefault();
                         e.stopPropagation();
+
+                        if (search.length > 0) {
+                            console.log("clearing search");
+                            setSearch("");
+                            return;
+                        }
+
+                        if (pages.length > 1) {
+                            console.log("popping page");
+                            removeAt(pages.length - 1);
+                            return
+                        }
+
+                        window.close();
+                        return
                     }
                 }
             } />
             <Command.List>
-                <Command.Empty>No results found.</Command.Empty>
-                {data?.result.data.vals.map((valRef) => (
-                    <Command.Item key={valRef.id} onSelect={
-                        async () => {
-                            const res = await fetchApi<getValResp>("getVal", { valNameId: valRef.id });
-                            const val = res.result.data;
-                            window.location.href = `https://www.val.town/v/${val.user.handle}/${val.name}`;
+                {
+                    (() => {
+                        if (error) {
+                            return <Command.Loading>{error}</Command.Loading>
                         }
-                    }>{valRef.name}</Command.Item>
-                ))}
+                        if (isLoading) {
+                            return <Command.Loading>Loading...</Command.Loading>
+                        }
+                        if (!currentPage.items.length) {
+                            return <Command.Empty>No results</Command.Empty>
+                        }
+
+                        return currentPage?.items.map((item, idx) => (
+                            <Item key={idx} item={item} onSelect={async () => {
+                                if (!item.commands?.length) {
+                                    return;
+                                }
+
+                                const primary = item.commands[0];
+                                setIsLoading(true);
+                                setSearch("");
+
+                                let slug = primary.val;
+                                if (slug?.startsWith("@")) {
+                                    slug = slug.slice(1);
+                                }
+
+                                console.log("running val", primary.val);
+                                let action: Action;
+                                try {
+                                    action = await runVal<Action>(primary.val, { params: primary.params || {} });
+                                } catch (e) {
+                                    setError((e as Error).message);
+                                    return;
+                                }
+
+                                console.log("action", action);
+
+                                switch (action.type) {
+                                    case "push": {
+                                        push(action.page);
+                                        break
+                                    }
+                                    case "open": {
+                                        await chrome.runtime.sendMessage({ type: "open", url: action.url });
+                                        window.close();
+                                        break
+                                    }
+                                    case "copy": {
+                                        await navigator.clipboard.writeText(action.text)
+                                        await sleep(50);
+                                        window.close();
+                                        break
+                                    }
+                                    case "close": {
+                                        window.close();
+                                        break
+                                    }
+                                }
+                                setIsLoading(false);
+                            }} />))
+                    })()
+                }
+
             </Command.List>
-        </Command.Dialog>
+        </Command>
     );
 };
 
-const queryClient = new QueryClient();
-const App = () => {
-    return <QueryClientProvider client={queryClient}>
-        <CommandPalette />
-    </QueryClientProvider>
+function hyphenToPascalCase(str: string) {
+    return str.replace(/-([a-z])/g, function (_, letter) {
+        return letter.toUpperCase();
+    }).replace(/^\w/, c => c.toUpperCase());
 }
 
-export default App;
+function Item({ item, onSelect }: { item: ListItem, onSelect: () => void }) {
+    const iconKey = hyphenToPascalCase(item.icon || "") + "Icon";
+    console.log("iconKey", iconKey);
+    const Icon = icons[iconKey as keyof typeof icons];
+    return <Command.Item value={item.title} onSelect={onSelect}>{Icon ? <Icon /> : undefined}{item.title}</Command.Item>
+}
+
+function Action({ action, onSelect }: { action: CommandRef, onSelect: () => void }) {
+    return <Command.Item value={action.title} onSelect={onSelect}>{action.title}</Command.Item>
+}
+
+
+export default CommandPalette;

@@ -1,8 +1,8 @@
 # Chrome Extension for Val Town
 
-Run vals from the browser context menu.
+Run vals from a command palette.
 
-![demo](./doc/screenshot.png)
+![demo](doc/demo.png)
 
 ## Installation
 
@@ -12,56 +12,21 @@ Run vals from the browser context menu.
 4. Enable developer mode.
 5. Click "Load unpacked" and select the unzipped folder.
 
+## Configuration
+
+1. Open the extension options
+    ![action right click menu](doc/options.png)
+2. Add you val.town token, and the slug of a val containing the configuration you want to use (you can use <https://val.town/v/pomdtr/extension_config> as a starting point).
+
 ## Usage
 
-Create a new val in val.town containing client-side javascript.
-The val privacy must be either "public" or "unlisted".
+Use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> (or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> on Mac) to open the command palette.
 
-```javascript
-import { BrowserContext } from "https://esm.town/v/pomdtr/browser";
-import { extractValInfo } from "https://esm.town/v/pomdtr/extractValInfo";
+A list of items will be shown. One or more commands will be available for each item. Use <kbd>Enter</kbd> to run the primary command, or <kbd>Tab</kbd> to cycle through the available commands.
 
-// Copy the val markdown link to the clipboard.
-export default function(ctx: BrowserContext) {
-  const { author, name } = extractValInfo(ctx.url);
-  await navigator.clipboard.writeText(`[@${author}/${name}](${location.href})`);
-}
-```
+## Development
 
-Then, right-click on the extension icon and select the `Options` item to open the settings editor.
+The extension api is still beeing worked own.
 
-You can then add new items to the `actions` list.
+All of the vals referenced in the default config are public, feel free to use them as a starting point.
 
-```jsonc
-{
-  "token": "your_token", // required, will be passed to your val
-  "actions": [
-    {
-      "title": "Copy Markdown Link",
-      "url": "https://esm.town/v/pomdtr/copy_markdown_link",
-    }
-  ]
-}
-```
-
-The context menu actions will appear on all val links (`https://www.val.town/v/*`).
-
-The following properties are available:
-
-- `title`: The title of the context menu item.
-- `url`: The url of the script to run.
-- `config`: The config to pass to the script.
-- `children`: An array of child context menu items. Cannot be used with `url` or `config`.
-
-## Examples
-
-- [Val to Image](https://esm.town/v/pomdtr/val2img)
-- [Open Dependency Graph](https://esm.town/v/pomdtr/open_dependency_graph)
-
-## Context
-
-The following properties are available on the context object passed to the val:
-
-- `url`: The url of the val.
-- `token`: The valtown token configured in the extension options.
-- `config`: The config passed to the val in the extension options.

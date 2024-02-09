@@ -1,20 +1,42 @@
 export type Config = {
-  token?: string;
-  actions: Action[];
+  token: string;
+  root: string;
 };
 
-export type Action = {
+export type CommandRef = {
   title: string;
-  config?: Record<string, any>;
-  url?: string;
-  children?: Action[];
+  val: string;
+  params?: Record<string, any>;
 };
 
-export const defaultConfig: Config = {
-  actions: [
-    {
-      title: "Copy Markdown Link",
-      url: "https://esm.town/v/pomdtr/copy_markdown_link",
-    },
-  ],
+export type List = {
+  type: "list";
+  placeholder?: string;
+  items: ListItem[];
+};
+
+export type Page = List;
+
+export type Action =
+  | {
+    type: "copy";
+    text: string;
+  }
+  | {
+    type: "open";
+    url: string;
+  }
+  | {
+    type: "push";
+    page: Page;
+  }
+  | {
+    type: "close";
+  };
+
+export type ListItem = {
+  title: string;
+  subtitle?: string;
+  icon?: string;
+  commands?: CommandRef[];
 };
