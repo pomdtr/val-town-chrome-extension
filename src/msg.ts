@@ -1,7 +1,10 @@
 export type ExtensionRequest = {
-  type: "open";
+  type: "open-url";
   url: string;
   options?: {
     replace?: boolean;
   };
+} | {
+  type: "get-url";
+  url: string;
 };

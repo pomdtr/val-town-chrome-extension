@@ -1,7 +1,14 @@
 import React from "react";
 import { Command } from "cmdk";
 import "./App.scss";
-import type { Config, List, ListItem, CommandRef, Action } from "~/config";
+import type {
+  Config,
+  List,
+  ListItem,
+  CommandRef,
+  Action,
+  BrowserContext,
+} from "~/config";
 import { useList } from "@uidotdev/usehooks";
 import * as icons from "@heroicons/react/24/outline";
 
@@ -21,7 +28,6 @@ async (url, ctx) => {
 
 async function extractRootCommands(val: string): Promise<CommandRef[]> {
   const valUrl = `https://esm.town/v/${val}`;
-  console.log("valUrl", valUrl);
   const resp = await fetch("https://api.val.town/v1/eval", {
     method: "POST",
     body: JSON.stringify({
@@ -74,8 +80,11 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const port = chrome.runtime.connect({ name: "popup" });
+
 const CommandPalette = () => {
   const [pages, { push, removeAt }] = useList<List>([]);
+  const [url, setUrl] = React.useState<string>();
   const [error, setError] = React.useState<string>();
   const [isLoading, setIsLoading] = React.useState(true);
   const [search, setSearch] = React.useState("");
@@ -86,37 +95,75 @@ const CommandPalette = () => {
   );
 
   React.useEffect(() => {
+    const listener = (msg: any) => {
+      console.log("worker -> popup", msg);
+      switch (msg.type) {
+        case "get-url": {
+          setUrl(msg.url || "unknown");
+          break;
+        }
+      }
+    };
+    port.onMessage.addListener(listener);
+
+    return () => {
+      port.onMessage.removeListener(listener);
+    };
+  }, []);
+
+  React.useEffect(() => {
     async function init() {
+      if (!url) {
+        console.log("sending message");
+        await port.postMessage({ type: "get-url" });
+        return;
+      }
+
       console.log("running val", config.root);
       const commands = await extractRootCommands(config.root);
-      const items: ListItem[] = commands.map((command) => ({
-        title: command.title,
-        icon: command.icon || "play",
-        commands: [
-          {
-            title: "Run Action",
-            val: command.val,
-            icon: "play",
-            params: command.params || {},
-          },
-          {
-            title: "Open Val",
-            val: "pomdtr/open_url",
-            icon: "link",
-            params: {
-              url: `https://val.town/v/${command.val}`,
+      const items: ListItem[] = commands
+        .filter((command) => {
+          if (!command.patterns) {
+            return true;
+          }
+
+          for (const pattern of command.patterns) {
+            // @ts-ignore
+            if (new URLPattern(pattern).test(url)) {
+              return true;
+            }
+          }
+
+          return false;
+        })
+        .map((command) => ({
+          title: command.title,
+          icon: command.icon || "play",
+          commands: [
+            {
+              title: "Run Action",
+              val: command.val,
+              icon: "play",
+              params: command.params || {},
             },
-          },
-          {
-            title: "Copy Val Url",
-            val: "pomdtr/copy_text",
-            icon: "clipboard",
-            params: {
-              text: `https://val.town/v/${command.val}`,
+            {
+              title: "Open Val",
+              val: "pomdtr/open_url",
+              icon: "link",
+              params: {
+                url: `https://val.town/v/${command.val}`,
+              },
             },
-          },
-        ],
-      }));
+            {
+              title: "Copy Val Url",
+              val: "pomdtr/copy_text",
+              icon: "clipboard",
+              params: {
+                text: `https://val.town/v/${command.val}`,
+              },
+            },
+          ],
+        }));
 
       setIsLoading(false);
       push({
@@ -126,7 +173,7 @@ const CommandPalette = () => {
     }
 
     init();
-  }, []);
+  }, [url]);
 
   React.useEffect(() => {
     const listener = (e: KeyboardEvent) => {
@@ -173,13 +220,11 @@ const CommandPalette = () => {
             e.stopPropagation();
 
             if (search.length > 0) {
-              console.log("clearing search");
               setSearch("");
               return;
             }
 
             if (pages.length > 1) {
-              console.log("popping page");
               removeAt(pages.length - 1);
               return;
             }
@@ -222,9 +267,11 @@ const CommandPalette = () => {
                 console.log("running val", primary.val);
                 let action: Action;
                 try {
-                  action = await runVal<Action>(primary.val, {
+                  const ctx: BrowserContext = {
+                    url,
                     params: primary.params || {},
-                  });
+                  };
+                  action = await runVal<Action>(primary.val, ctx);
                 } catch (e) {
                   setError((e as Error).message);
                   return;
@@ -238,8 +285,8 @@ const CommandPalette = () => {
                     break;
                   }
                   case "open": {
-                    await chrome.runtime.sendMessage({
-                      type: "open",
+                    await port.postMessage({
+                      type: "open-url",
                       url: action.url,
                     });
                     window.close();
@@ -276,7 +323,6 @@ function hyphenToPascalCase(str: string) {
 
 function Item({ item, onSelect }: { item: ListItem; onSelect: () => void }) {
   const iconKey = hyphenToPascalCase(item.icon || "") + "Icon";
-  console.log("iconKey", iconKey);
   const Icon = icons[iconKey as keyof typeof icons];
   return (
     <Command.Item value={item.title} onSelect={onSelect}>

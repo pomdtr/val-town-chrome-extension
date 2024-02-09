@@ -3,9 +3,15 @@ export type Config = {
   root: string;
 };
 
+export type BrowserContext = {
+  url?: string;
+  params: Record<string, any>;
+};
+
 export type CommandRef = {
   title: string;
   val: string;
+  patterns?: string[];
   icon?: string;
   params?: Record<string, any>;
 };
