@@ -18,6 +18,13 @@ Run vals from a command palette.
     ![action right click menu](doc/options.png)
 2. Add you val.town token, and the slug of a val containing the configuration you want to use (you can use <https://val.town/v/pomdtr/extension_config> as a starting point).
 
+```jsonc
+{
+    "token": "<your token>",
+    "root": "pomdtr/extension_config",
+}
+```
+
 ## Usage
 
 Use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> (or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> on Mac) to open the command palette.
