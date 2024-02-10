@@ -129,9 +129,21 @@ const CommandPalette = () => {
 
           for (const pattern of command.patterns) {
             // @ts-ignore
-            if (new URLPattern(pattern).test(url)) {
-              return true;
+            const match = new URLPattern(pattern).exec(url);
+            if (!match) {
+              continue;
             }
+
+            // move the named groups to the params
+            const groups = match.pathname.groups || {};
+            for (const [k, v] of Object.entries(groups)) {
+              if (!command.params) {
+                command.params = {};
+              }
+              command.params[k] = v;
+            }
+
+            return true;
           }
 
           return false;
