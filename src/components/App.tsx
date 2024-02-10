@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Command } from "cmdk";
 import "./App.scss";
 import type {
@@ -9,7 +9,6 @@ import type {
   Action,
   BrowserContext,
 } from "~/config";
-import { useList } from "@uidotdev/usehooks";
 import * as icons from "@heroicons/react/24/outline";
 
 const storage = await chrome.storage.local.get(["config"]);
@@ -82,45 +81,31 @@ function sleep(ms: number) {
 
 const port = chrome.runtime.connect({ name: "popup" });
 
-const CommandPalette = () => {
-  const [pages, { push, removeAt }] = useList<List>([]);
-  const [url, setUrl] = React.useState<string>();
-  const [error, setError] = React.useState<string>();
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [search, setSearch] = React.useState("");
-  const [value, setValue] = React.useState("");
-  const currentPage = pages[pages.length - 1];
-  const focusedItem = currentPage?.items.find(
-    (item) => item.title.trim().toLowerCase() === value
-  );
-
-  React.useEffect(() => {
+function sendMessage(msg: any): Promise<any> {
+  console.log("sendMessage", msg);
+  return new Promise((resolve) => {
     const listener = (msg: any) => {
-      console.log("worker -> popup", msg);
-      switch (msg.type) {
-        case "get-url": {
-          setUrl(msg.url || "unknown");
-          break;
-        }
-      }
-    };
-    port.onMessage.addListener(listener);
-
-    return () => {
       port.onMessage.removeListener(listener);
+      resolve(msg);
     };
-  }, []);
 
-  React.useEffect(() => {
+    port.onMessage.addListener(listener);
+    port.postMessage(msg);
+  });
+}
+
+function getTabUrl(): Promise<string> {
+  return sendMessage({ type: "get-tab-url" });
+}
+
+const CommandPalette = () => {
+  const [root, setRoot] = React.useState<List>();
+  useEffect(() => {
     async function init() {
-      if (!url) {
-        console.log("sending message");
-        await port.postMessage({ type: "get-url" });
-        return;
-      }
-
-      console.log("running val", config.root);
       const commands = await extractRootCommands(config.root);
+      const tabUrl = await getTabUrl();
+      console.log("tabUrl", tabUrl);
+
       const items: ListItem[] = commands
         .filter((command) => {
           if (!command.patterns) {
@@ -129,7 +114,7 @@ const CommandPalette = () => {
 
           for (const pattern of command.patterns) {
             // @ts-ignore
-            const match = new URLPattern(pattern).exec(url);
+            const match = new URLPattern(pattern).exec(tabUrl);
             if (!match) {
               continue;
             }
@@ -177,34 +162,110 @@ const CommandPalette = () => {
           ],
         }));
 
-      setIsLoading(false);
-      push({
+      setRoot({
         type: "list",
         items,
       });
     }
 
     init();
-  }, [url]);
+  }, []);
+  if (!root) {
+    return (
+      <Command>
+        <Command.Input disabled />
+        <Command.List>
+          <Command.Loading>Loading...</Command.Loading>
+        </Command.List>
+      </Command>
+    );
+  }
+
+  return (
+    <Page
+      page={root}
+      pop={() => {
+        window.close();
+      }}
+    />
+  );
+};
+
+function Page(props: { page: List; pop: () => void }) {
+  const [value, setValue] = React.useState("");
+  const [error, setError] = React.useState<string>();
+  const [search, setSearch] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [child, setChild] = React.useState<List>();
+  const [showCommands, setShowCommands] = React.useState(false);
+  const [commandSearch, setCommandSearch] = React.useState("");
+
+  const focusedItem = props.page.items.find(
+    (item) => item.title.trim().toLowerCase() === value
+  );
+
+  async function handleCommand(command: CommandRef) {
+    setIsLoading(true);
+
+    let slug = command.val;
+    if (slug?.startsWith("@")) {
+      slug = slug.slice(1);
+    }
+
+    console.log("running val", command.val);
+    let action: Action;
+    try {
+      const ctx: BrowserContext = {
+        url: await getTabUrl(),
+        params: command.params || {},
+      };
+      action = await runVal<Action>(command.val, ctx);
+    } catch (e) {
+      setError((e as Error).message);
+      return;
+    }
+
+    console.log("action", action);
+
+    switch (action.type) {
+      case "push": {
+        setChild(action.page);
+        break;
+      }
+      case "open": {
+        await port.postMessage({
+          type: "open-url",
+          url: action.url,
+        });
+        window.close();
+        break;
+      }
+      case "copy": {
+        await navigator.clipboard.writeText(action.text);
+        await sleep(50);
+        window.close();
+        break;
+      }
+      case "close": {
+        window.close();
+        break;
+      }
+    }
+    setIsLoading(false);
+  }
 
   React.useEffect(() => {
     const listener = (e: KeyboardEvent) => {
+      if (child) {
+        return;
+      }
+
       // when tab is pressed, show the actions
       if (e.key === "Tab") {
         e.preventDefault();
         if (!focusedItem) {
           return;
         }
-        setSearch("");
-        push({
-          type: "list",
-          items:
-            focusedItem?.commands?.map((command) => ({
-              title: command.title,
-              icon: command.icon,
-              commands: [command],
-            })) || [],
-        });
       }
     };
 
@@ -212,20 +273,70 @@ const CommandPalette = () => {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [push, focusedItem, setSearch]);
+  }, [child, focusedItem]);
+
+  if (child) {
+    return (
+      <Page
+        page={child}
+        pop={() => {
+          setChild(undefined);
+        }}
+      />
+    );
+  }
+
+  if (showCommands) {
+    return (
+      <Command>
+        <Command.Input
+          placeholder="Search Commands..."
+          value={commandSearch}
+          onValueChange={setCommandSearch}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              e.stopPropagation();
+
+              if (commandSearch.length > 0) {
+                setCommandSearch("");
+                return;
+              }
+
+              setShowCommands(false);
+            }
+          }}
+        />
+        <Command.List>
+          {focusedItem?.commands?.map((command, idx) => (
+            <Item
+              key={idx}
+              item={{
+                title: command.title,
+                icon: command.icon,
+                commands: [command],
+              }}
+              onSelect={async () => {
+                setShowCommands(false);
+                handleCommand(command);
+              }}
+            />
+          ))}
+        </Command.List>
+      </Command>
+    );
+  }
 
   return (
     <Command value={value} onValueChange={setValue}>
       <Command.Input
-        placeholder={
-          isLoading ? undefined : currentPage.placeholder || "Search..."
-        }
         autoFocus
         onBlur={(e) => {
           e.target.focus();
         }}
         value={search}
         onValueChange={setSearch}
+        placeholder={isLoading ? undefined : "Search Items..."}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             e.preventDefault();
@@ -236,13 +347,14 @@ const CommandPalette = () => {
               return;
             }
 
-            if (pages.length > 1) {
-              removeAt(pages.length - 1);
-              return;
-            }
-
-            window.close();
+            props.pop();
             return;
+          }
+
+          if (e.key === "Tab") {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowCommands(true);
           }
         }}
       />
@@ -254,11 +366,12 @@ const CommandPalette = () => {
           if (isLoading) {
             return <Command.Loading>Loading...</Command.Loading>;
           }
-          if (!currentPage.items.length) {
+
+          if (!props.page.items.length) {
             return <Command.Empty>No results</Command.Empty>;
           }
 
-          return currentPage?.items.map((item, idx) => (
+          return props.page.items.map((item, idx) => (
             <Item
               key={idx}
               item={item}
@@ -267,55 +380,7 @@ const CommandPalette = () => {
                   return;
                 }
 
-                const primary = item.commands[0];
-                setIsLoading(true);
-                setSearch("");
-
-                let slug = primary.val;
-                if (slug?.startsWith("@")) {
-                  slug = slug.slice(1);
-                }
-
-                console.log("running val", primary.val);
-                let action: Action;
-                try {
-                  const ctx: BrowserContext = {
-                    url,
-                    params: primary.params || {},
-                  };
-                  action = await runVal<Action>(primary.val, ctx);
-                } catch (e) {
-                  setError((e as Error).message);
-                  return;
-                }
-
-                console.log("action", action);
-
-                switch (action.type) {
-                  case "push": {
-                    push(action.page);
-                    break;
-                  }
-                  case "open": {
-                    await port.postMessage({
-                      type: "open-url",
-                      url: action.url,
-                    });
-                    window.close();
-                    break;
-                  }
-                  case "copy": {
-                    await navigator.clipboard.writeText(action.text);
-                    await sleep(50);
-                    window.close();
-                    break;
-                  }
-                  case "close": {
-                    window.close();
-                    break;
-                  }
-                }
-                setIsLoading(false);
+                handleCommand(item.commands[0]);
               }}
             />
           ));
@@ -323,7 +388,7 @@ const CommandPalette = () => {
       </Command.List>
     </Command>
   );
-};
+}
 
 function hyphenToPascalCase(str: string) {
   return str
@@ -340,20 +405,6 @@ function Item({ item, onSelect }: { item: ListItem; onSelect: () => void }) {
     <Command.Item value={item.title} onSelect={onSelect}>
       {Icon ? <Icon /> : undefined}
       {item.title}
-    </Command.Item>
-  );
-}
-
-function Action({
-  action,
-  onSelect,
-}: {
-  action: CommandRef;
-  onSelect: () => void;
-}) {
-  return (
-    <Command.Item value={action.title} onSelect={onSelect}>
-      {action.title}
     </Command.Item>
   );
 }

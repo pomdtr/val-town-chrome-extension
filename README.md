@@ -32,7 +32,7 @@ export default [
   {
     title: "Convert to Image",
     val: "pomdtr/val2img",
-    patterns: ["https://www.val.town/v/*/*"],
+    patterns: ["https://www.val.town/v/:author/:name"],
   },
   {
     title: "Edit Config",

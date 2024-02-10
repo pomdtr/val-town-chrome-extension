@@ -5,6 +5,6 @@ export type ExtensionRequest = {
     replace?: boolean;
   };
 } | {
-  type: "get-url";
+  type: "get-tab-url";
   url: string;
 };
