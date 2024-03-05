@@ -119,9 +119,10 @@ const CommandPalette = () => {
               continue;
             }
 
-            // move the named groups to the params
-            const groups = match.pathname.groups || {};
-            for (const [k, v] of Object.entries(groups)) {
+            for (const [k, v] of Object.entries({
+              ...match.hostname.groups,
+              ...match.pathname.groups,
+            })) {
               if (!command.params) {
                 command.params = {};
               }
