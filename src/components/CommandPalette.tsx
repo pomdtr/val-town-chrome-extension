@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Command } from "cmdk";
-import "./App.scss";
+import "./CommandPalette.scss";
 import type {
   Config,
   List,
@@ -18,9 +18,10 @@ const code = `
 async (url, ctx) => {
   try {
     const { default: handler } = await import(url);
-    return await handler(ctx);
+    const value = await handler(ctx);
+    return { type: "success", value };
   } catch (e) {
-    return { error: e.message };
+    return { type: "error", value: e.message };
   }
 }
 `;
@@ -46,10 +47,7 @@ async function extractRootCommands(val: string): Promise<CommandRef[]> {
   return resp.json();
 }
 
-async function runVal<T extends Object = any>(
-  val: string,
-  ctx?: Record<string, any>
-) {
+async function runVal<T = any>(val: string, ctx?: Record<string, any>) {
   const valUrl = `https://esm.town/v/${val}`;
   const resp = await fetch("https://api.val.town/v1/eval", {
     method: "POST",
@@ -67,12 +65,14 @@ async function runVal<T extends Object = any>(
     throw new Error(`Failed to run val: ${await resp.text()}`);
   }
 
-  const output = (await resp.json()) as T | { error: string };
-  if ("error" in output) {
-    throw new Error(output.error);
+  const output = (await resp.json()) as
+    | { type: "success"; value: T }
+    | { type: "error"; value: string };
+  if (output.type === "error") {
+    throw new Error(output.value);
   }
 
-  return output as T;
+  return output.value;
 }
 
 function sleep(ms: number) {
@@ -98,14 +98,25 @@ function getTabUrl(): Promise<string> {
   return sendMessage({ type: "get-tab-url" });
 }
 
-const CommandPalette = () => {
+const CommandPalette = (props: { commands: CommandRef[] }) => {
+  const [commands, setCommands] = React.useState<CommandRef[]>(
+    props.commands || []
+  );
   const [root, setRoot] = React.useState<List>();
   useEffect(() => {
-    async function init() {
-      const commands = await extractRootCommands(config.root);
-      const tabUrl = await getTabUrl();
-      console.log("tabUrl", tabUrl);
+    // refresh the commands
+    extractRootCommands(config.root).then((commands) => {
+      chrome.storage.session.set({ commands: JSON.stringify(commands) });
+      setCommands(commands);
+    });
+  }, []);
 
+  useEffect(() => {
+    async function init() {
+      if (!commands.length) {
+        return;
+      }
+      const tabUrl = await getTabUrl();
       const items: ListItem[] = commands
         .filter((command) => {
           if (!command.patterns) {
@@ -170,7 +181,8 @@ const CommandPalette = () => {
     }
 
     init();
-  }, []);
+  }, [commands]);
+
   if (!root) {
     return (
       <Command>
@@ -220,7 +232,12 @@ function Page(props: { page: List; pop: () => void }) {
         url: await getTabUrl(),
         params: command.params || {},
       };
-      action = await runVal<Action>(command.val, ctx);
+      const output = await runVal<Action | null>(command.val, ctx);
+      if (!output) {
+        window.close();
+        return;
+      }
+      action = output;
     } catch (e) {
       setError((e as Error).message);
       return;
@@ -410,4 +427,8 @@ function Item({ item, onSelect }: { item: ListItem; onSelect: () => void }) {
   );
 }
 
-export default CommandPalette;
+const session = await chrome.storage.session.get(["commands"]);
+let commands = JSON.parse(session.commands || "[]") as CommandRef[];
+export default () => {
+  return <CommandPalette commands={commands} />;
+};
