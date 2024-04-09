@@ -5,31 +5,25 @@ export const manifest: chrome.runtime.ManifestV3 = {
   version: "0.0.0",
   manifest_version: 3,
   action: {
-    default_title: "Click to open Val Town",
     default_icon: {
       16: "icons/16.png",
       19: "icons/19.png",
       32: "icons/32.png",
       38: "icons/38.png",
     },
-    default_popup: "src/popup.html",
   },
   background: {
     service_worker: "src/worker.ts",
   },
-  commands: {
-    _execute_action: {
-      description: "Show Command Palette",
-      suggested_key: {
-        mac: "Command+Shift+P",
-        default: "Ctrl+Shift+P",
-      },
+  host_permissions: ["https://*.val.town/*", "https://*.web.val.run/*"],
+  content_scripts: [
+    {
+      matches: ["https://*.val.town/*"],
+      js: ["src/content-script.tsx"],
+      run_at: "document_end",
     },
-  },
-  permissions: [
-    "storage",
-    "activeTab",
   ],
+  permissions: ["storage", "activeTab"],
   options_ui: {
     page: "src/options.html",
   },

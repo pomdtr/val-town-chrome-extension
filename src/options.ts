@@ -12,9 +12,9 @@ import {
   defaultHighlightStyle,
   syntaxHighlighting,
 } from "@codemirror/language";
+import { loadConfig } from "./config";
 
-const { config } = await chrome.storage.local.get(["config"]);
-
+const config = await loadConfig();
 const state = EditorState.create({
   extensions: [
     lineNumbers(),
@@ -35,7 +35,7 @@ const state = EditorState.create({
     jsonLanguage,
     syntaxHighlighting(defaultHighlightStyle),
   ],
-  doc: config || JSON.stringify({}, null, 2),
+  doc: JSON.stringify(config, null, 2),
 });
 
 new EditorView({
