@@ -26,9 +26,9 @@ Add a customizable sidebar to val.town.
 
 ## Usage
 
-The val.town extension adds a sidebar to val.town. The content of this sidebar is up to you.
+The val.town extension adds a sidebar to val.town. You can open it by clicking on the icon on the bottom left of the screen.
 
-Each time the sidebar is opened, the extension will fetch the content from the url specified in the options.
+The content of this sidebar is up to you: Each time the sidebar is opened, the extension will fetch the content from the url specified in the options.
 
 ## Types
 
@@ -68,7 +68,7 @@ type OpenAction = {
 
 ![tree example](assets/tree_example.png)
 
-[More here](https://val-town-by-example.pomdtr.me/v/pomdtr/tree_example)
+[View Source](https://val-town-by-example.pomdtr.me/v/pomdtr/tree_example)
 
 In order to use the example tree, you can use the following configuration:
 
@@ -78,6 +78,9 @@ In order to use the example tree, you can use the following configuration:
 }
 ```
 
+Or just fork the val, and create your own tree.
+
 ## TODO
 
 - [ ] Allow the user to create custom actions
+- [ ] Show the sidebar on other websites ?
