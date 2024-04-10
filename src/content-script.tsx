@@ -4,11 +4,11 @@ import React, { useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { loadConfig } from "./config";
 
-type Tree = Node[];
+type Tree = TreeItem[];
 
-type Node = {
+type TreeItem = {
   title: string;
-  children?: Node[] | string;
+  children?: TreeItem[] | string;
   expanded?: boolean;
   actions?: Action[];
 };
@@ -51,7 +51,6 @@ async function fetcher<T = any>(url: string, init?: RequestInit): Promise<T> {
     headers["X-Val-Slug"] = `${val.author}/${val.name}`;
   }
 
-  console.log("fetching", config);
   const [author, name] = config.rootVal.split("/");
   const rootUrl = `https://${author}-${name}.web.val.run`;
   url = new URL(url, rootUrl).toString();
@@ -64,7 +63,6 @@ async function fetcher<T = any>(url: string, init?: RequestInit): Promise<T> {
     },
   });
 
-  console.log(res);
   return res;
 }
 
@@ -73,8 +71,8 @@ export function Sidebar(props: { onClose?: () => void }) {
   const { mutate } = useSWRConfig();
 
   return (
-    <div className="text-sm flex flex-col">
-      <div className="flex items-center justify-end gap-x-2">
+    <div className="text-sm flex flex-col gap-y-2">
+      <div className="flex items-center justify-end gap-x-2 px-1">
         <button
           className="text-xl"
           onClick={() => {
@@ -98,8 +96,8 @@ export function Sidebar(props: { onClose?: () => void }) {
   );
 }
 
-function Tree({ root }: { root: Node }) {
-  const [children, setChildren] = React.useState<Node[]>();
+function Tree({ root }: { root: TreeItem }) {
+  const [children, setChildren] = React.useState<TreeItem[]>();
   const [open, setOpen] = React.useState(root.expanded);
 
   useEffect(() => {
@@ -113,17 +111,11 @@ function Tree({ root }: { root: Node }) {
     }
 
     fetcher<Tree>(root.children).then(setChildren);
-  }, [open]);
+  }, [children, open]);
 
   if (!root.children) {
     return (
-      <p
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        className="text-ellipsis"
-      >
+      <p className="text-ellipsis">
         <Item title={root.title} actions={root.actions} />
       </p>
     );
@@ -153,32 +145,75 @@ function Tree({ root }: { root: Node }) {
 }
 
 function Item(props: { title: string; actions?: Action[] }) {
+  let title;
+  if (!props.actions || props.actions.length === 0) {
+    title = <span>{props.title}</span>;
+  } else {
+    const action = props.actions[0];
+    if (action.type === "open") {
+      title = (
+        <a
+          href={action.url}
+          className="hover:cursor-pointer hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {props.title}
+        </a>
+      );
+    } else {
+      title = (
+        <button
+          className="hover:cursor-pointer hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(action.text);
+          }}
+        >
+          {props.title}
+        </button>
+      );
+    }
+  }
   return (
     <>
-      {props.title}{" "}
-      {props.actions?.map((action, idx) => (
-        <Action key={idx} action={action} />
+      {title}{" "}
+      {props.actions?.slice(1).map((action, idx) => (
+        <span key={idx}>
+          <Action key={idx} action={action} />
+          {idx !== (props.actions || []).length - 1 && " "}
+        </span>
       ))}
     </>
   );
 }
 
 function Action({ action }: { action: Action }) {
-  return (
-    <>
+  if (action.type === "open") {
+    return (
       <a
-        href={action.type === "open" ? action.url : undefined}
+        href={action.url}
         className={"hover:cursor-pointer"}
         onClick={(e) => {
           e.stopPropagation();
-          if (action.type === "copy") {
-            navigator.clipboard.writeText(action.text);
-          }
         }}
       >
         {action.icon || "▶️"}
-      </a>{" "}
-    </>
+      </a>
+    );
+  }
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        if (action.type === "copy") {
+          navigator.clipboard.writeText(action.text);
+        }
+      }}
+    >
+      {action.icon || "▶️"}
+    </button>
   );
 }
 document.body.classList.add("flex");
