@@ -12,7 +12,7 @@ Add a customizable sidebar to val.town.
 
 ## Usage
 
-Click on the Sidebar icon on the bottom left of the screen
+Click on the icon on the bottom left of the screen to open the sidebar.
 
 ![sidebar icon](assets/sidebar-icon.png)
 
