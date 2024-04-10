@@ -4,9 +4,9 @@ Add a customizable sidebar to val.town.
 
 ## Installation
 
-1. Download `extension.zip` from the [releases page](https://github.com/pomdtr/val-town-web-extension/releases/latest).
+1. Download the latest version of the extension by clicking on [this link](https://github.com/pomdtr/val-town-chrome-extension/releases/latest/download/extension.zip)
 2. Unzip the file.
-3. Open the [extensions page](chrome://extensions) in Chrome.
+3. Open the extensions page in Chrome (`chrome://extensions/`).
 4. Enable developer mode.
 5. Click "Load unpacked" and select the unzipped folder.
 
